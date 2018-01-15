@@ -1,0 +1,64 @@
+<script type='text/javascript'>
+$.get("/appointmentInfo", function(data) {
+
+    $(document).ready(function() {
+
+        $('#calendar').fullCalendar({
+            header: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'month,agendaWeek,agendaDay,listWeek'
+            },
+            timezone: 'local',
+            defaultDate: '2018-01-01',
+            selectable: true,
+            selectHelper: true,
+            select: function(start, end) {
+                var title = confirm('Book this slot?');
+
+                var eventData;
+                if (title == true) {
+                    eventData = {
+                        title: 'Slot booked',
+                        start: start.format(),
+                        end: end.format()
+                    };
+                    // $('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+                    console.log(eventData);
+                    $.post("/newAppointment", { start: start._d, end: end._d }, function(data, err) {
+                        // window.location('http://localhost:8080/index2.html');
+                        //    alert('Booking confirmed');
+                        // $('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+                    });
+                    //$.post($location.host() + "/newAppointment", {JSON.stringify(eventData)});
+                    $('#calendar').fullCalendar('renderEvent', eventData, true); // stick? = true
+                    alert('Booking confirmed');
+
+                } else {
+                    $('#calendar').fullCalendar('unselect');
+                }
+            },
+            navLinks: true, // can click day/week names to navigate views
+            editable: false,
+            eventLimit: true, // allow "more" link when too many events
+            events: data
+        });
+
+    });
+
+});
+</script>
+<style>
+body {
+    margin: 40px 10px;
+    padding: 0;
+    font-family: "Lucida Grande", Helvetica, Arial, Verdana, sans-serif;
+    font-size: 14px;
+}
+
+#calendar {
+    max-width: 900px;
+    margin: 0 auto;
+}
+</style>
+<div id='calendar'></div>
