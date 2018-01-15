@@ -33,7 +33,26 @@ fs.readFile('client_secret.json', function processClientSecrets(err, content) {
  * @param {Object} credentials The authorization client credentials.
  * @param {function} callback The callback to call with the authorized client.
  */
-exports.authorize = function authorize(credentials,start, end, callback) {
+// exports.authorize = function authorize(credentials,start, end, callback) {
+//     console.log("Authorize triggered")
+//     var clientSecret = credentials.installed.client_secret;
+//     var clientId = credentials.installed.client_id;
+//     var redirectUrl = credentials.installed.redirect_uris[0];
+//     var auth = new googleAuth();
+//     var oauth2Client = new auth.OAuth2(clientId, clientSecret, redirectUrl);
+
+//     // Check if we have previously stored a token.
+//     fs.readFile(TOKEN_PATH, function(err, token) {
+//         if (err) {
+//             getNewToken(oauth2Client, callback);
+//         } else {
+//             oauth2Client.credentials = JSON.parse(token);
+//             callback(oauth2Client, start, end);
+//         }
+//     });
+// }
+
+function authorize(credentials, callback) {
     console.log("Authorize triggered")
     var clientSecret = credentials.installed.client_secret;
     var clientId = credentials.installed.client_id;
@@ -47,10 +66,11 @@ exports.authorize = function authorize(credentials,start, end, callback) {
             getNewToken(oauth2Client, callback);
         } else {
             oauth2Client.credentials = JSON.parse(token);
-            callback(oauth2Client, start, end);
+            callback(oauth2Client);
         }
     });
 }
+
 
 /**
  * Get and store new token after prompting for user authorization, and then
@@ -160,56 +180,97 @@ function createEvents(auth, start, end) {
 
 
 
-function availability(auth, start, end, callback) {
-    var calendar = google.calendar('v3');
-    calendar.freebusy.query({
-            auth: auth,
-            resource: {
-                "timeMin": start,
-                "timeMax": end,
-                "timeZone": "Asia/Calcutta",
-                "items": [{
-                    "id": "primary"
-                }]
-            }
+exports.availability = function availability(content, start, end, callback) {
+    authorize(content, function(auth) {
 
-        },
-        function(err, response) {
-            if (err) {
-                console.log('The API returned an error: ' + err);
-                return;
-            }
-            // if(response.calendars.primary.busy != 0)
-            // {
-            //     console.log(response.calendars.primary.busy);
 
-            // }
-            // else{console.log("Empty")}
+        var calendar = google.calendar('v3');
+        calendar.freebusy.query({
+                auth: auth,
+                resource: {
+                    "timeMin": start,
+                    "timeMax": end,
+                    "timeZone": "Asia/Calcutta",
+                    "items": [{
+                        "id": "primary"
+                    }]
+                }
 
-            callback(response.calendars.primary.busy);
-        });
+            },
+            function(err, response) {
+                if (err) {
+                    console.log('The API returned an error: ' + err);
+                    return;
+                }
+                // if(response.calendars.primary.busy != 0)
+                // {
+                //     console.log(response.calendars.primary.busy);
+
+                // }
+                // else{console.log("Empty")}
+
+                callback(response.calendars.primary.busy);
+            });
+    });
 }
 
 
- exports.bookSlot = function bookSlot(auth, start, end) {
+exports.bookSlot = function bookSlot(content, start, end) {
+    authorize(content, function(auth) {
     var calendar = google.calendar('v3');
     // var inputDateTimeStart = moment("2018-01-27 19:15");
-    var start = moment(start);
+    //var start = moment(start);
     // var inputDateTimeEnd = moment("2018-01-27 19:50");
-    var end = moment(end);
+    //var end = moment(end);
 
-    availability(auth, start, end, function(dateobj) {
+    // availability(auth, start, end, function(dateobj) {
 
-        if (dateobj != 0) {
-            console.log("Slot already booked from : ")
-            console.log(dateobj);
-        } else {
-            console.log("Slot availabile");
-            createEvents(auth, start, end);
-        }
+    //     if (dateobj != 0) {
+    //         console.log("Slot already booked from : ")
+    //         console.log(dateobj);
+    //     } else {
+    //         console.log("Slot availabile");
+    //         createEvents(auth, start, end);
+    //     }
 
-    })
+    // })
+
+    createEvents(auth, start, end);
+});
 };
+
+
+
+// exports.availability = function availability(auth, start, end, callback) {
+
+// var calendar = google.calendar('v3');
+//         calendar.freebusy.query({
+//                 auth: auth,
+//                 resource: {
+//                     "timeMin": start,
+//                     "timeMax": end,
+//                     "timeZone": "Asia/Calcutta",
+//                     "items": [{
+//                         "id": "primary"
+//                     }]
+//                 }
+
+//             },
+//             function(err, response) {
+//                 if (err) {
+//                     console.log('The API returned an error: ' + err);
+//                     return;
+//                 }
+//                 // if(response.calendars.primary.busy != 0)
+//                 // {
+//                 //     console.log(response.calendars.primary.busy);
+
+//                 // }
+//                 // else{console.log("Empty")}
+
+//                 callback(response.calendars.primary.busy);
+//             });
+//     }
 
 
 
