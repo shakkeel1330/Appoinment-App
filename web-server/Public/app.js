@@ -7,7 +7,7 @@ app.config(function($routeProvider){
 	$routeProvider
 
 	.when('/', {
-		templateUrl: 'home.html',
+		templateUrl: 'default.html',
 		controller: 'homeController'
 	})
 
@@ -19,6 +19,11 @@ app.config(function($routeProvider){
 	.when('/members', {
 		templateUrl: 'members.html',
 		controller: 'membersController'
+	})
+
+	.when('/calendar', {
+		templateUrl: 'calendar.html',
+		controller: 'calendarController'
 	})
 
 	.when('/appointment', {
@@ -37,10 +42,14 @@ app.controller("loginController", function($scope) {
     $scope.message = "login page";
 });
 
-app.controller("memberController", function($scope) {
+app.controller("membersController", function($scope) {
     $scope.message = "Members list";
 });
 
-app.controller("appointmentController", function($scope) {
+app.controller("calendarController", function($scope) {
     $scope.message = "Calendar page";
+});
+
+app.controller("appointmentController", function($scope) {
+    $scope.message = "Appointment page";
 });
