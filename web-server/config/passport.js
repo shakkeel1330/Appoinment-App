@@ -24,24 +24,24 @@ module.exports = function(passport) {
 
 
     // used to serialize the user for the session
-    // passport.serializeUser(function(user, done) {
-    //     console.log("ser");
-    //     console.log(user);
-    //     done(null, user.id);
-    // });
+    passport.serializeUser(function(user, done) {
+        console.log("ser");
+        console.log(user);
+        done(null, user.id);
+    });
 
-    // // used to deserialize the user
-    // passport.deserializeUser(function(id, done) {
-    //     // console.log(user);
-    //     // console.log(err);
-    //     User.userProfile.findOne({ id: id }, function(err, user) {
-    //         // User.findById(id, function(err, user) {
-    //         console.log("des");
-    //         done(err, user);
-    //         // console.log(`deserialized user ${user}`);
-    //         // done(err, id);
-    //     });
-    // });
+    // used to deserialize the user
+    passport.deserializeUser(function(id, done) {
+        // console.log(user);
+        // console.log(err);
+        User.userProfile.findOne({ id: id }, function(err, user) {
+            // User.findById(id, function(err, user) {
+            console.log("des");
+            done(err, user);
+            // console.log(`deserialized user ${user}`);
+            // done(err, id);
+        });
+    });
 
     // =========================================================================
     // GOOGLE ==================================================================
@@ -81,21 +81,19 @@ module.exports = function(passport) {
 
                         // save the user
                         newUser.save(function(err) {
-                            if (err) 
+                            if (err)
                                 throw err;
                             // } else {
                             //     req.login(newUser.id, function(err) {
                             //             console.log('UserId attached to session!')
                             //         }
-                                    return done(null, newUser);
+                            return done(null, newUser);
 
-                                // )
-                            })
-                        }
-                    })
-                });
+                            // )
+                        })
+                    }
+                })
             });
-
         }));
 
 
@@ -143,17 +141,17 @@ module.exports = function(passport) {
 
     // }));
 
-    passport.serializeUser(function(user, done) {
-        console.log("ser");
-        console.log(user);
-        done(null, user.id);
-    });
+    // passport.serializeUser(function(user, done) {
+    //     console.log("ser");
+    //     console.log(user);
+    //     done(null, user.id);
+    // });
 
-    // used to deserialize the user
-    passport.deserializeUser(function(user, done) {
-        console.log("des");
-        done(null, user);
+    // // used to deserialize the user
+    // passport.deserializeUser(function(user, done) {
+    //     console.log("des");
+    //     done(null, user);
 
-    });
+    // });
 
 };
