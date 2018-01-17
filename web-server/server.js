@@ -1,8 +1,9 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 var moment = require('moment');
-var passport = require('passport')
-var session = require('express-session')
+var passport = require('passport');
+var session = require('express-session');
+const CassandraStore = require("cassandra-store");
 var appController = require('./appointmentAppController.js')
 var gapi = require('./quickstart.js')
 var cookieParser = require('cookie-parser');
@@ -19,8 +20,29 @@ app.use(express.static(__dirname + 'Public'));
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json({ limit: '50mb' }));
-app.use(session({ secret: 'secretkeysecret', key: 'user_sid', cookie: { expires: 600000 }, resave: false, saveUninitialized: false })); // session secret
+
+
+var options = {
+    "table": "sessions",
+    "client": null,
+    "clientOptions": {
+        "contactPoints": [ "127.0.0.1" ],
+        "keyspace": "appointment_app",
+        "queryOptions": {
+            "prepare": true
+        }
+    }
+}
+
+
+
+// From 'express-session'
+app.use(session({ secret: 'secretkeysecret', key: 'user_sid', store: new CassandraStore(options), cookie: { expires: 600000 }, resave: false, saveUninitialized: false })); // session secret
+
+// Initializes passportjs.
 app.use(passport.initialize());
+
+// Integrates passport with express-session.
 app.use(passport.session()); // persistent login sessions
 // app.use(session({
 //     key: 'user_sid',
@@ -58,13 +80,13 @@ app.use(passport.session()); // persistent login sessions
 
 
 app.get('/#/', (req, res) => {
-    res.render('index.html');
+    // res.render('../index.html');
     res.clearCookie('user_sid');
     req.session.destroy();
 })
 
-app.get('/index2',checkAuthentication,function(req,res){
-    res.render("index2.html");
+app.get('/main',checkAuthentication,function(req,res){
+    res.redirect("/main.html");
 });
 
 // app.get('/index2', (req, res) => {
@@ -74,13 +96,22 @@ app.get('/index2',checkAuthentication,function(req,res){
 app.get('/logout', (req, res) => {
     if (req.cookies.user_sid) {
         res.clearCookie('user_sid');
-        req.session.destroy();
+        // req.session = null;
+        req.session.destroy(function(err){
+            
+        });
         res.redirect('/');
-    } else {
-        res.redirect('/');
-        req.session.destroy();
-        res.clearCookie('user_sid');
-    }
+       } 
+
+    // req.logout();
+    // res.redirect('/');
+    // res.clearCookie('user_sid');
+    // req.session.destroy();
+    //  else {
+    //     res.redirect('/');
+    //     req.session.destroy();
+    //     res.clearCookie('user_sid');
+    // }
 });
 
 
@@ -103,7 +134,6 @@ app.get('/appointmentInfo', (req, res) => {
     gapi.availability(JSON.parse(gapi.content), startTime, endTime, function(freeBusy) {
         // console.log(freeBusy);
         res.json(freeBusy);
-        console.log(req);
     });
 
 });
@@ -130,21 +160,21 @@ app.post('/newAppointment', (req, res) => {
 
 });
 
-app.post('/updateAppointment', (req, res) => {
+// app.post('/updateAppointment', (req, res) => {
 
-    obj = { id: parseInt(req.body.id), key: req.body.key, value: req.body.value };
-    appController.updateAppointment(obj, function(err, result) {
-        if (err) {
-            res.status(400)
-                .send({
-                    message: "Invalid input",
-                    status: res.status
-                })
-        }
-        res.json(result);
-        console.log("Appointment updated");
-    });
-});
+//     obj = { id: parseInt(req.body.id), key: req.body.key, value: req.body.value };
+//     appController.updateAppointment(obj, function(err, result) {
+//         if (err) {
+//             res.status(400)
+//                 .send({
+//                     message: "Invalid input",
+//                     status: res.status
+//                 })
+//         }
+//         res.json(result);
+//         console.log("Appointment updated");
+//     });
+// });
 
 
 app.post('/cancelAppointment', (req, res) => {
@@ -169,7 +199,8 @@ app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'em
 // the callback after google has authenticated the user
 app.get('/auth/google/callback',
     passport.authenticate('google', {
-        successRedirect: '/index2.html',
+        // successRedirect: '/index2.html',
+        successRedirect: '/main',
         failureRedirect: '/'
     }));
 
@@ -183,10 +214,11 @@ function checkAuthentication(req,res,next){
 }
 
 
-app.listen(8080, () => {
+server_test = app.listen(8080, () => {
     console.log("Server is up on port 8080");
 });
 
+module.exports = server_test;
 
 // $.get( "appointmentInfo", function( data ) {
 //   $( ".result" ).html( data ); // insert fullCalendar function here.
